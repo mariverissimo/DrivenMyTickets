@@ -44,9 +44,13 @@ describe('GET /events/:id', () => {
   });
 
   it('deve retornar 404 se o evento não existir', async () => {
-    const res = await agent.get(`/events/999999`);
-
+    const res = await agent.get('/events/999999');
     expect(res.status).toBe(404);
+  });
+
+  it('deve retornar 400 se o id não for numérico', async () => {
+    const res = await agent.get('/events/abc');
+    expect(res.status).toBe(400);
   });
 });
 
@@ -63,9 +67,13 @@ describe('POST /events', () => {
     expect(res.body).toHaveProperty('id');
   });
 
-  it('deve retornar 409 se o nome já existir', async () => {
-    const name = faker.lorem.words(2);
+  it('deve retornar 422 se os dados forem inválidos', async () => {
+    const res = await agent.post('/events').send({});
+    expect(res.status).toBe(422);
+  });
 
+  it('deve retornar 409 se o nome do evento já existir', async () => {
+    const name = faker.lorem.words(2);
     await prisma.event.create({
       data: { name, date: faker.date.future() },
     });
@@ -76,12 +84,6 @@ describe('POST /events', () => {
     });
 
     expect(res.status).toBe(409);
-  });
-
-  it('deve retornar 422 se os dados forem inválidos', async () => {
-    const res = await agent.post('/events').send({});
-
-    expect(res.status).toBe(422);
   });
 });
 
@@ -120,6 +122,20 @@ describe('PUT /events/:id', () => {
 
     expect(res.status).toBe(404);
   });
+
+  it('deve retornar 409 se tentar atualizar para um nome já existente', async () => {
+    const nameExistente = faker.lorem.words(2);
+    await prisma.event.create({ data: { name: nameExistente, date: faker.date.future() } });
+
+    const event = await prisma.event.create({ data: { name: 'Evento Original', date: faker.date.future() } });
+
+    const res = await agent.put(`/events/${event.id}`).send({
+      name: nameExistente,
+      date: faker.date.future().toISOString(),
+    });
+
+    expect(res.status).toBe(409);
+  });
 });
 
 describe('DELETE /events/:id', () => {
@@ -137,8 +153,12 @@ describe('DELETE /events/:id', () => {
   });
 
   it('deve retornar 404 se o evento não existir', async () => {
-    const res = await agent.delete(`/events/999999`);
-
+    const res = await agent.delete('/events/999999');
     expect(res.status).toBe(404);
+  });
+
+  it('deve retornar 400 se o id não for numérico', async () => {
+    const res = await agent.delete('/events/abc');
+    expect(res.status).toBe(400);
   });
 });

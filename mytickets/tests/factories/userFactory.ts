@@ -1,8 +1,9 @@
 import { faker } from '@faker-js/faker';
 
-export function createUserBody() {
+export function generateTicketBody(eventId: number) {
   return {
-    email: faker.internet.email(),
-    password: faker.internet.password(),
+    owner: faker.person.fullName(),
+    code: faker.string.alphanumeric(8),
+    eventId,
   };
 }
