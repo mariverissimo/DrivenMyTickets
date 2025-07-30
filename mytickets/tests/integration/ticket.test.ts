@@ -53,6 +53,54 @@ describe('Tickets routes', () => {
       const res = await agent.post('/tickets').send(body);
       expect(res.status).toBe(404);
     });
+
+    it('deve retornar 403 se o evento já passou (ticket expirado)', async () => {
+      const pastEvent = await prisma.event.create({
+        data: {
+          name: faker.lorem.words(3),
+          date: faker.date.past(),
+        },
+      });
+
+      const body = {
+        owner: faker.person.fullName(),
+        code: faker.string.alphanumeric(8),
+        eventId: pastEvent.id,
+      };
+
+      const res = await agent.post('/tickets').send(body);
+      expect(res.status).toBe(403);
+      expect(res.body.message).toMatch(/already happened/i);
+    });
+
+    it('deve retornar 409 se já existir ticket com o mesmo código para o evento', async () => {
+      const event = await prisma.event.create({
+        data: {
+          name: faker.lorem.words(3),
+          date: faker.date.future(),
+        },
+      });
+
+      const code = faker.string.alphanumeric(8);
+
+      await prisma.ticket.create({
+        data: {
+          owner: faker.person.fullName(),
+          code,
+          eventId: event.id,
+        },
+      });
+
+      const body = {
+        owner: faker.person.fullName(),
+        code,
+        eventId: event.id,
+      };
+
+      const res = await agent.post('/tickets').send(body);
+      expect(res.status).toBe(409);
+      expect(res.body.message).toMatch(/already registered/i);
+    });
   });
 
   describe('GET /tickets/:eventId', () => {
@@ -137,6 +185,28 @@ describe('Tickets routes', () => {
 
       const res = await agent.put(`/tickets/use/${ticket.id}`);
       expect(res.status).toBe(409);
+    });
+
+    it('deve retornar 403 se o evento do ticket já passou ao usar o ticket', async () => {
+      const pastEvent = await prisma.event.create({
+        data: {
+          name: faker.lorem.words(3),
+          date: faker.date.past(),
+        },
+      });
+
+      const ticket = await prisma.ticket.create({
+        data: {
+          owner: faker.person.fullName(),
+          code: faker.string.alphanumeric(8),
+          eventId: pastEvent.id,
+          used: false,
+        },
+      });
+
+      const res = await agent.put(`/tickets/use/${ticket.id}`);
+      expect(res.status).toBe(403);
+      expect(res.body.message).toMatch(/already happened/i);
     });
 
     it('deve retornar 400 se o ID não for numérico', async () => {
