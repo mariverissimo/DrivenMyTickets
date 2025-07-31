@@ -1,5 +1,5 @@
 import supertest from 'supertest';
-import app from '../../src/index';
+import app from '../../src/server';
 import { faker } from '@faker-js/faker';
 import { PrismaClient } from '@prisma/client';
 
@@ -70,7 +70,9 @@ describe('Tickets routes', () => {
 
       const res = await agent.post('/tickets').send(body);
       expect(res.status).toBe(403);
-      expect(res.body.message).toMatch(/already happened/i);
+      expect(res.body).toHaveProperty('message');
+      expect(typeof res.body.message).toBe('string');
+      expect(res.body.message.toLowerCase()).toMatch(/already happened/);
     });
 
     it('deve retornar 409 se já existir ticket com o mesmo código para o evento', async () => {
@@ -99,7 +101,9 @@ describe('Tickets routes', () => {
 
       const res = await agent.post('/tickets').send(body);
       expect(res.status).toBe(409);
-      expect(res.body.message).toMatch(/already registered/i);
+      expect(res.body).toHaveProperty('message');
+      expect(typeof res.body.message).toBe('string');
+      expect(res.body.message.toLowerCase()).toMatch(/already registered/);
     });
   });
 
@@ -127,12 +131,12 @@ describe('Tickets routes', () => {
     });
 
     it('deve retornar 404 se o evento não existir', async () => {
-      const res = await agent.get(`/tickets/999999`);
+      const res = await agent.get('/tickets/999999');
       expect(res.status).toBe(404);
     });
 
     it('deve retornar 400 se o eventId não for um número', async () => {
-      const res = await agent.get(`/tickets/abc`);
+      const res = await agent.get('/tickets/abc');
       expect(res.status).toBe(400);
     });
   });
@@ -162,7 +166,7 @@ describe('Tickets routes', () => {
     });
 
     it('deve retornar 404 se o ticket não existir', async () => {
-      const res = await agent.put(`/tickets/use/999999`);
+      const res = await agent.put('/tickets/use/999999');
       expect(res.status).toBe(404);
     });
 
@@ -206,11 +210,14 @@ describe('Tickets routes', () => {
 
       const res = await agent.put(`/tickets/use/${ticket.id}`);
       expect(res.status).toBe(403);
-      expect(res.body.message).toMatch(/already happened/i);
+      expect(res.body).toHaveProperty('message');
+      expect(typeof res.body.message).toBe('string');
+
+      expect(res.body.message.toLowerCase()).toMatch(/already happened/);
     });
 
     it('deve retornar 400 se o ID não for numérico', async () => {
-      const res = await agent.put(`/tickets/use/abc`);
+      const res = await agent.put('/tickets/use/abc');
       expect(res.status).toBe(400);
     });
   });
