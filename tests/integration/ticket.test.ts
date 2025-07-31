@@ -70,9 +70,9 @@ describe('Tickets routes', () => {
 
       const res = await agent.post('/tickets').send(body);
       expect(res.status).toBe(403);
-      expect(res.body).toHaveProperty('message');
-      expect(typeof res.body.message).toBe('string');
-      expect(res.body.message.toLowerCase()).toMatch(/already happened/);
+      // ALTERAÇÃO AQUI:
+      expect(typeof res.text).toBe('string');
+      expect(res.text.toLowerCase()).toMatch(/already happened/);
     });
 
     it('deve retornar 409 se já existir ticket com o mesmo código para o evento', async () => {
@@ -101,9 +101,9 @@ describe('Tickets routes', () => {
 
       const res = await agent.post('/tickets').send(body);
       expect(res.status).toBe(409);
-      expect(res.body).toHaveProperty('message');
-      expect(typeof res.body.message).toBe('string');
-      expect(res.body.message.toLowerCase()).toMatch(/already registered/);
+      // ALTERAÇÃO AQUI:
+      expect(typeof res.text).toBe('string');
+      expect(res.text.toLowerCase()).toMatch(/already registered/);
     });
   });
 
@@ -210,10 +210,9 @@ describe('Tickets routes', () => {
 
       const res = await agent.put(`/tickets/use/${ticket.id}`);
       expect(res.status).toBe(403);
-      expect(res.body).toHaveProperty('message');
-      expect(typeof res.body.message).toBe('string');
-
-      expect(res.body.message.toLowerCase()).toMatch(/already happened/);
+      // ALTERAÇÃO AQUI:
+      expect(typeof res.text).toBe('string');
+      expect(res.text.toLowerCase()).toMatch(/already happened/);
     });
 
     it('deve retornar 400 se o ID não for numérico', async () => {
