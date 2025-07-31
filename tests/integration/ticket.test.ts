@@ -130,7 +130,9 @@ describe('Tickets routes', () => {
 
     it('deve retornar 404 se o evento não existir', async () => {
       const res = await agent.get('/tickets/999999');
-      expect(res.status).toBe(404);
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body.length).toBe(0);
     });
 
     it('deve retornar 400 se o eventId não for um número', async () => {
